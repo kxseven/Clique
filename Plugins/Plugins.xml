@@ -35,4 +35,5 @@
     <Script file="Clique_XPerl.lua"/>
     <Script file="Clique_AofHeal.lua"/>
     <Script file="Clique_LunaUnitFrames.lua"/>
+    <Script file="Clique_pfUI.lua"/>
 </Ui>
