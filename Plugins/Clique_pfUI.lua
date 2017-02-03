@@ -18,7 +18,8 @@ Plugin.url = "https://github.com/shagu/pfUI"
 -- but it will be checked if it exists.  Will typically be based off some global
 -- or the state of the addon itself.
 function Plugin:Test()
-    if not IsAddOnLoaded("pfUI") then return false end
+    -- if IsAddOnLoaded("pfUI") then return false end
+    return pfUI_OnClick_Handler
 end
 
 
