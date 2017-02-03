@@ -1,9 +1,9 @@
 --[[---------------------------------------------------------------------------------
   Clique by Cladhaire <cladhaire@gmail.com>
-  GUI concept/code by Gello 
-  
+  GUI concept/code by Gello
+
   TODO:
-  
+
 ----------------------------------------------------------------------------------]]
 
 --[[---------------------------------------------------------------------------------
@@ -11,9 +11,9 @@
 ----------------------------------------------------------------------------------]]
 
 Clique = AceLibrary("AceAddon-2.0"):new(
-    "AceHook-2.0", 
-    "AceConsole-2.0", 
-    "AceDB-2.0", 
+    "AceHook-2.0",
+    "AceConsole-2.0",
+    "AceDB-2.0",
     "AceEvent-2.0",
     "AceModuleCore-2.0",
     "AceDebug-2.0"
@@ -30,9 +30,12 @@ Clique:SetModuleMixins("AceHook-2.0", "AceEvent-2.0", "AceDebug-2.0")
 ----------------------------------------------------------------------------------]]
 
 function Clique:OnInitialize()
+
+	DEFAULT_CHAT_FRAME:AddMessage("Loading Clique : Relapsed version 1.1.")
+
     self:LevelDebug(2, "Clique:OnInitialize()")
     self:CheckProfile()
-    
+
     self:LevelDebug(3, "Setting all modules to inactive.")
     for name,module in self:IterateModules() do
         self:ToggleModuleActive(name, false)
@@ -47,10 +50,10 @@ function Clique:OnEnable()
         StaticPopup_Show("CLIQUE_AUTO_SELF_CAST")
         return
     end
-    
+
     -- Register for ADDON_LOADED so we can load plugins for LOD addons
     self:RegisterEvent("ADDON_LOADED", "LoadModules")
-    
+
     -- Build the action table, so we have precompiled functions
 	self:ScanSpellbook()
     self:BuildActionTable()
@@ -58,10 +61,10 @@ function Clique:OnEnable()
 	-- Enable tooltips in the GUI
 	self:EnableTooltips()
     self:RegUtilFuncs()
-    
+
     -- Create the hook tables
     self._OnClick = {}
-    
+
     -- Load any valid modules
     self:LoadModules()
 
@@ -78,9 +81,9 @@ function Clique:LoadModules()
     for name,module in self:IterateModules() do
         if not self:IsModuleActive(name) and not module.disabled then
             -- Try to enable the module
-            
+
             local loadModule = nil
-                        
+
             if module.Test and type(module.Test) == "function" then
                 if module:Test() then
                     loadModule = true
@@ -88,11 +91,11 @@ function Clique:LoadModules()
             else
                 loadModule = true
             end
-            
+
             if loadModule and not Clique:IsModuleActive(name) then
                 self:LevelDebug(1, "Enabling module \"%s\" for %s.", name, module.fullname)
                 Clique:ToggleModuleActive(name,true)
- 
+
                 if module._OnClick then
                     self:LevelDebug(2, "Grabbing _OnClick from %s", name)
                     self._OnClick[name] = module
@@ -112,20 +115,20 @@ end
 
 function Clique:BuildActionTable()
     self:LevelDebug(2, "Clique:BuildActionTable()")
-    
+
     local actions = self:ClearTable(self.Actions)
     self.Actions = actions
-    
+
     for k,v in pairs(self.db.char) do
         actions[k] = {}
-        
+
         for i,entry in ipairs(v) do
             local a = bit.band(entry.modifiers, 1)
             local c = bit.band(entry.modifiers, 2)
             local s = bit.band(entry.modifiers, 4)
-            
+
             -- Skip any non-bound entries
-            if entry.button ~= L"BINDING_NOT_DEFINED" then 
+            if entry.button ~= L"BINDING_NOT_DEFINED" then
                 local key = string.format("%s%d", entry.button, entry.modifiers)
                 local action = entry.action
                 if not action and not entry.custom then
@@ -139,11 +142,11 @@ function Clique:BuildActionTable()
                         action = string.format("Clique:CastSpell(\"%s\")", entry.name)
                     end
                 end
-                
+
                 --self:Print(action)
-                
+
                 local func,errString = loadstring(action)
-                if func then 
+                if func then
                     actions[k][key] = func
                 else
                     DEFAULT_CHAT_FRAME:AddMessage(string.format(L"ERROR_SCRIPT", errString))
@@ -154,9 +157,9 @@ function Clique:BuildActionTable()
 end
 
 function Clique:OnClick(button, unit)
-    unit = unit or this.unit 
+    unit = unit or this.unit
     button = button or arg1
-    local a,c,s = IsAltKeyDown() or 0, IsControlKeyDown() or 0, IsShiftKeyDown() or 0 
+    local a,c,s = IsAltKeyDown() or 0, IsControlKeyDown() or 0, IsShiftKeyDown() or 0
 
     local targettarget = nil
 
@@ -166,13 +169,16 @@ function Clique:OnClick(button, unit)
             error(string.format(L"NO_UNIT_FRAME", tostring(this:GetName())))
         end
     end
-	
+
 	if not UnitExists(unit) then
 		return
 	end
 
     Clique.unit = unit
+
+	-- DEFAULT_CHAT_FRAME:AddMessage("Clique:OnClick() -----------------------------------------")
 	-- DEFAULT_CHAT_FRAME:AddMessage("Clique:OnClick("..tostring(button)..", "..tostring(unit)..")")
+
     if not UnitExists(unit) then return end
 
     -- If the casting hand is up on the screen, cast the waiting spell on
@@ -202,17 +208,17 @@ function Clique:OnClick(button, unit)
 	if UnitCanAttack("player", unit) then
 		default = L"DEFAULT_HOSTILE"
 	end
-    
+
     Clique.set = default
-    
+
     -- Iterate the hooks here
     for name,module in pairs(Clique._OnClick) do
-        if module:_OnClick(button, Clique.unit) then 
+        if module:_OnClick(button, Clique.unit) then
             self:LevelDebug(3, "Module %s has changed the clique set.", name)
-            break 
+            break
         end
     end
-	
+
 	if not Clique.set or not Clique.Actions[Clique.set] then
 		Clique.set = default
 	end
@@ -221,13 +227,13 @@ function Clique:OnClick(button, unit)
     modifiers = bit.bor(modifiers, a * 1)
     modifiers = bit.bor(modifiers, c * 2)
     modifiers = bit.bor(modifiers, s * 4)
-	
+
     local key = string.format("%s%d", button, modifiers)
     local func = Clique.Actions[Clique.set][key]
     local entry = Clique.db.char[Clique.set][key]
-	
+
     self:LevelDebug(2, "Clique:OnClick("..button..", " .. modifiers..")")
-    
+
 	if not func then
         self:LevelDebug(3, "Casting from the default set instead.")
 		func = Clique.Actions[default][key]
@@ -236,7 +242,7 @@ function Clique:OnClick(button, unit)
 
     if func then
         func()
-		
+
 		-- In case spell failed to apply
 		if SpellIsTargeting() then SpellStopTargeting() end
 
@@ -248,15 +254,20 @@ end
 
 function Clique:CastSpell(spell, unit)
 	local restore = nil
+	local targettarget = nil
 	unit = unit or Clique.unit
-    
+
     -- IMPORTANT: If the unit is targettarget or more, then we need to try
     -- to convert it to a friendly unit (to make click-casting work
-    -- properly). If this isn't successful, set it up so we restore our 
+    -- properly). If this isn't successful, set it up so we restore our
     -- target
-	
+
 	self:LevelDebug(2, "Clique:CastSpell("..tostring(spell)..", "..tostring(unit) .. ")")
 
+	-- DEFAULT_CHAT_FRAME:AddMessage("Clique:CastSpell("..tostring(spell)..", "..tostring(unit)..")")
+
+	-- This could be buggy, we could be targettarget, or targettargettarget
+	-- or we could be easytarget
     if string.find(unit, "target") and string.len(unit) > 6 then
         local friendly = Clique:GetFriendlyUnit(unit)
 
@@ -267,48 +278,56 @@ function Clique:CastSpell(spell, unit)
             targettarget = true
         end
     end
-    
+
     -- Lets resolve the targeting.  If this is a hostile target and its
     -- not currently our target, then we will need to target the unit
+
     if UnitCanAttack("player", unit) then
         if not UnitIsUnit(unit, "target") then
             self:LevelDebug(2, "Changing to hostile target.")
+			-- DEFAULT_CHAT_FRAME:AddMessage("Clique:CastSpell() : Changing to hostile target")
             TargetUnit(unit)
         end
 
 	-- If we're looking at someone else's target, we have to change targets since
     -- ClearTarget() will get rid of the blahtarget unitID entirely.  We only do
 	-- this if this is a friendly target (since they will consume the spell)
+
 	elseif targettarget and not UnitCanAttack("player", "target") then
 		self:LevelDebug(2, "Changing target due to friendly target.")
+		-- DEFAULT_CHAT_FRAME:AddMessage("Clique:CastSpell() : Changing target due to friendly target")
 		TargetUnit(unit)
-    
+		restore = true
+
     -- If the target is a friendly unit, and its not the unit we're casting on
     elseif UnitExists("target") and not UnitCanAttack("player", "target") and not UnitIsUnit(unit, "target") then
         self:LevelDebug(3, "Clearing the target")
+		-- DEFAULT_CHAT_FRAME:AddMessage("Clique:CastSpell() : ClearTarget()")
         ClearTarget()
         restore = true
-	
+
     elseif UnitExists("target") and self:IsDualSpell(spell) and not UnitIsUnit(unit, "target") then
         self:LevelDebug(3, "Clearing target for this dual spell")
+		-- DEFAULT_CHAT_FRAME:AddMessage("Clique:CastSpell() : ClearTarget() for this dual spell")
         ClearTarget()
         restore = true
     end
 
     --self:Print("Clique:CastSpell(%s, %s)", spell, unit)
     --self:Print("Dual Spell: %s, %s", spell, tostring(self:IsDualSpell(spell)))
-    
+
 	CastSpellByName(spell)
-	
+
 	if SpellIsTargeting() then
         self:LevelDebug(3, "SpellTargetingUnit")
         SpellTargetUnit(unit)
 	end
-    
+
     if SpellIsTargeting() then SpellStopTargeting() end
-	
+
 	if restore then
         self:LevelDebug(3, "Restoring with TargetLastTarget")
+		-- DEFAULT_CHAT_FRAME:AddMessage("Clique:CastSpell() : Restoring with TargetLastTarget()")
 		TargetLastTarget()
 	end
 end
