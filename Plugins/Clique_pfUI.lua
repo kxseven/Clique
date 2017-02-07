@@ -19,7 +19,7 @@ Plugin.url = "https://github.com/shagu/pfUI"
 -- or the state of the addon itself.
 function Plugin:Test()
     -- if IsAddOnLoaded("pfUI") then return false end
-    return pfUI_OnClick_Handler
+    return pfUI.info.ping
 end
 
 
@@ -27,6 +27,7 @@ end
 -- disabled.  This is where you should handle all your hooks, etc.
 function Plugin:OnEnable()
     pfUI_Custom_ClickFunction = self.OnClick
+    -- DEFAULT_CHAT_FRAME:AddMessage("Clique: pfUI Support Enabled")
 end
 
 -- Plugin:OnDisable() is called if the mod is enabled and its being explicitly disabled.
@@ -34,9 +35,12 @@ end
 -- Plugin:UnregisterAllHooks().
 function Plugin:OnDisable()
     pfUI_Custom_ClickFunction = nil
+    -- DEFAULT_CHAT_FRAME:AddMessage("Clique: pfUI Support Disabled")
 end
 
 -- Below this line begins any custom code to make the plugin work
 function Plugin.OnClick(button, unit)
+    -- DEFAULT_CHAT_FRAME:AddMessage("Clique: pfUI OnClick triggered")
     return Clique:OnClick(button, unit)
 end
+
