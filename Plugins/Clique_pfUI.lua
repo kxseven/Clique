@@ -19,7 +19,11 @@ Plugin.url = "https://github.com/shagu/pfUI"
 -- or the state of the addon itself.
 function Plugin:Test()
     -- if IsAddOnLoaded("pfUI") then return false end
-    return pfUI.info.ping
+    if IsAddOnLoaded("pfUI") then
+        -- DEFAULT_CHAT_FRAME:AddMessage("Clique: pfUI is loaded")
+        return true
+    end
+    return false
 end
 
 
