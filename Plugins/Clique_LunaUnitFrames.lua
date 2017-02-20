@@ -12,73 +12,38 @@
 -- Create a new plugin for Clique, with the shortname "test"
 local Plugin = Clique:NewModule("luf")
 Plugin.fullname = "LunaUnitFrames"
-Plugin.url = "http://www.google.com"
+Plugin.url = "https://github.com/Aviana/LunaUnitFrames"
 
 -- Plugin:Test() is called anytime the mod tries to enable.  It is optional
 -- but it will be checked if it exists.  Will typically be based off some global
 -- or the state of the addon itself.
 function Plugin:Test()
-    -- return IsAddOnLoaded("LunaUnitFrames")
-	return Luna_OnClick
+    -- if IsAddOnLoaded("LUF") then return false end
+    if IsAddOnLoaded("LunaUnitFrames") then
+        -- DEFAULT_CHAT_FRAME:AddMessage("Clique: LUF is loaded")
+        return true
+    end
+    return false
 end
 
--- Plugin:OnEnable() is called if Plugin:Test() is true, and the mod hasn't been explicitly
+
+--- Plugin:OnEnable() is called if Plugin:Test() is true, and the mod hasn't been explicitly
 -- disabled.  This is where you should handle all your hooks, etc.
 function Plugin:OnEnable()
-
-	-- Standard hooks do not work ...
-	-- Set new handlers directly on the frames ...
-
-	-- Single frames ...
-
-	LunaPlayerFrame:SetScript("OnClick", Plugin.LUFClick)
-	LunaPetFrame:SetScript("OnClick", Plugin.LUFClick)
-	LunaTargetFrame:SetScript("OnClick", Plugin.LUFClick)
-	LunaTargetTargetFrame:SetScript("OnClick", Plugin.LUFClick)
-	LunaTargetTargetTargetFrame:SetScript("OnClick", Plugin.LUFClick)
-
-	-- Party frames ...
-	local i = 0
-	for i=1, 4 do
-		LunaPartyFrames[i]:SetScript("OnClick", Plugin.LUFClick)
-		LunaPartyPetFrames[i]:SetScript("OnClick", Plugin.LUFClick)
-		LunaPartyTargetFrames[i]:SetScript("OnClick", Plugin.LUFClick)
-	end
-
-	-- Raid frames ...
-	local z = 0
-    for i=1, 8 do
-		for z=1,5 do
-			LunaUnitFrames.frames.RaidFrames[i].member[z]:SetScript("OnClick", Plugin.LUFClick_Raid)
-		end
-	end
-
+    Luna_Custom_ClickFunction = self.OnClick
+    -- DEFAULT_CHAT_FRAME:AddMessage("Clique: LUF Support Enabled")
 end
 
-function Plugin:LUFClick()
-
-	local button = arg1
-	local unit = this.unit
-
-	if not Clique:OnClick(button, unit) then
-		Luna_OnClick()
-	end
-
+-- Plugin:OnDisable() is called if the mod is enabled and its being explicitly disabled.
+-- This function is optional.  If it doesn't exist, Plugin:UnregisterAllEvents() and
+-- Plugin:UnregisterAllHooks().
+function Plugin:OnDisable()
+    Luna_Custom_ClickFunction = nil
+    -- DEFAULT_CHAT_FRAME:AddMessage("Clique: LUF Support Disabled")
 end
 
-function Plugin:LUFClick_Raid()
-
-	local button = arg1
-	local unit = this.unit
-
-	if not Clique:OnClick(button, unit) then
-		if Luna_Raid_OnClick then
-			Luna_Raid_OnClick()
-		else
-			Luna_OnClick()
-		end
-	end
-
+-- Below this line begins any custom code to make the plugin work
+function Plugin.OnClick(button, unit)
+    -- DEFAULT_CHAT_FRAME:AddMessage("Clique: LUF OnClick triggered")
+    return Clique:OnClick(button, unit)
 end
-
-
